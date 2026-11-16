@@ -1,0 +1,54 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Stock {
+  id Int @id @default(autoincrement())
+  ticker String @unique
+  name String
+  price Decimal
+  last_price_date DateTime
+  market_cap Decimal
+  price_to_sales Decimal
+  year DateTime
+  quarter DateTime
+  gross_margin Decimal
+  operating_margin Decimal
+  return_on_assets Decimal
+  return_on_equity Decimal
+  revenue Decimal
+  ebitda Decimal
+  pat Decimal
+  total_cash Decimal
+  total_debt Decimal
+  debt_to_equity Decimal
+  current_ratio Decimal
+  user_stock User_Stock[]
+}
+
+model User_Stock {
+  userId  Int
+  stockId Int
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stock Stock @relation(fields: [stockId], references: [id], onDelete: Cascade)
+
+  @@id([userId, stockId])
+}
+
+model User {
+  id         Int          @id @default(autoincrement())
+  name       String
+  email      String       @unique
+  password   String
+  user_stock User_Stock[]
+}
