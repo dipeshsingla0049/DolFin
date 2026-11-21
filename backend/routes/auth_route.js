@@ -6,26 +6,31 @@ const jwt = require("jsonwebtoken");
 
 let router = express.Router();
 
+
+// register route 
 router.post("/register", async (req, res) => {
-  const { username, password } = req.body;
+  const { name, email, password } = req.body;
 
-  if (!username || !password) {
-    return res.status(400).json({ message: "Username and password are required" });
+  // Validate input
+  if (!name || !email || !password) {
+    return res.status(400).json({ message: "Name, email, and password are required" });
   }
 
-  const existingUser = await prisma.user.findUnique({
-    where: { username },
+  // Check if the email already exists
+  const existingEmail = await prisma.user.findUnique({
+    where: { email },
   });
-  if (existingUser) {
-    return res.status(409).json({ message: "Username already exists" });
+  if (existingEmail) {
+    return res.status(409).json({ message: "Email already exists" });
   }
 
-
+  // Hash the password and create a new user
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
       data: {
-        username,
+        email,
+        name,
         password: hashedPassword,
       },
     });
@@ -41,29 +46,32 @@ router.post("/register", async (req, res) => {
 }); 
 
 
+// login route 
 router.post("/login", async (req, res) => {
-  const { username, password } = req.body;
+  const { email, password } = req.body;
 
-
-  if (!username || !password) {
-    return res.status(400).json({ message: "Username and password are required" });
+  // Validate input
+  if (!email || !password) {
+    return res.status(400).json({ message: "Email and password are required" });
   }
 
-
+  // Check if the user exists
   try {
     const user = await prisma.user.findUnique({
-      where: { username },
+      where: { email },
     });
 
     if (!user) {
-      return res.status(401).json({ message: "Invalid username or password" });
+      return res.status(401).json({ message: "Invalid email or password" });
     }
 
+    // Compare the provided password with the hashed password in the database
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      return res.status(401).json({ message: "Invalid username or password" });
+      return res.status(401).json({ message: "Invalid email or password" });
     }
 
+    // login successful, generate JWT token and send it in the response
     const token = jwt.sign(user, process.env.SECRET_KEY);
 
     res.status(200).json({ message: "Login successful", userId: user.id, token });
@@ -71,6 +79,10 @@ router.post("/login", async (req, res) => {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
   }
+});
+
+module.exports = router;
+
 });
 
 module.exports = router;
