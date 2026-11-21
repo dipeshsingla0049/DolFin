@@ -17,7 +17,7 @@ async function statistics(id,key){
 }
 
 
-modules.export = {market_price,statistics}
+module.exports = {market_price,statistics}
 
 
 
